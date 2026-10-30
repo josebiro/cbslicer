@@ -1,6 +1,6 @@
 # Grain / cbslicer
 
-A browser-based end-grain cutting board designer. Choose wood species, dimensions, pattern, border, and milling allowances. Paint individual center blocks, print the plan, or download a CSV with a grouped cut list and the complete row-by-row layout.
+A browser-based end-grain cutting board designer. Choose wood species, dimensions, pattern, border, and milling allowances. Start with the Blank pattern, choose a wood brush, and paint individual center blocks (or use the eraser). Unassigned cells are excluded from estimates, and print/CSV export become available when every cell is assigned. Dimension and palette changes preserve painted cells; selecting a pattern starts a new layout. You can also print the plan, or download a CSV with a grouped cut list and the complete row-by-row layout.
 
 ## Develop
 

@@ -17,12 +17,14 @@ export function plan(c){
  ys.forEach((y,r)=>xs.forEach((x,col)=>{
  const edge=b&&(r===0||col===0||r===ys.length-1||col===xs.length-1),i=col-(b?1:0),j=r-(b?1:0);
  let p=c.pattern==='stripes'?i:c.pattern==='diagonal'?i+j:c.pattern==='basket'?Math.floor(i/2)+Math.floor(j/2):i+j;
- const id=edge?c.borderWood:(c.overrides?.[`${j},${i}`]||c.palette[p%c.palette.length]);
+ const id=edge?c.borderWood:(Object.hasOwn(c.overrides||{},`${j},${i}`)?c.overrides[`${j},${i}`]:c.pattern==='blank'?null:c.palette[p%c.palette.length]);
  const cell={x,y,r,col,id,edge,key:`${j},${i}`};cells.push(cell);
+ if(id===null)return;
+ if(!woods.some(w=>w.id===id))throw Error('Choose a valid wood for each block.');
  const k=[id,x.toFixed(8),y.toFixed(8)].join('|');
  if(!groups.has(k))groups.set(k,{id,x,y,count:0});groups.get(k).count++;
  }));
  const cuts=[...groups.values()].map(g=>({...g,roughX:g.x+c.allowance,roughY:g.y+c.allowance,roughZ:c.thickness+c.allowance}));
  const volume=cuts.reduce((s,g)=>s+g.count*g.roughX*g.roughY*g.roughZ,0)/144;
- return {xs,ys,cells,cuts,volume,total:cells.length};
+ return {xs,ys,cells,cuts,volume,total:cells.length,unassigned:cells.filter(cell=>cell.id===null).length};
 }
