@@ -18,7 +18,7 @@ The following construction taxonomy and implemented algorithm are engineering pr
 | Brick / running bond | Wide bands offset between adjacent rows, with end pieces or trimming | Rectangular runs merged into long strips; alternating panel layouts |
 | Houndstooth | A repeated interlocking two-color motif, assembled using multiple composite layouts; exact woodworking recipes vary | Twill-derived study; generic row-panel route, no claim of optimized traditional recipe |
 | Chevron / herringbone | Angled segments and controlled grain orientation; may need additional cutting and glue-ups | Not implemented; requires polygon geometry and angle-aware stock calculations |
-| Rhombus / tumbling blocks | Three-tone diamond units, often with angled composite stock | Not implemented; square-cell painting is not a valid substitute for this joinery |
+| Rhombus / tumbling blocks | Three-tone diamond units, often with angled composite stock | Composite-unit designer: three actual rhombi form a hexagonal slice; staggered tessellation and crop budgeting |
 | Woven / optical patterns | Multiple band widths, offsets, and sometimes further panel slicing | Basket preset only; advanced interwoven joinery not implemented |
 
 ## Implemented two-glue-up schedule
@@ -33,4 +33,7 @@ Both borders participate in the same row geometry: the optional outer border sur
 
 ## Next research / implementation work
 
-Verify named examples with accessible primary tutorials; document each actual strip sequence, orientation and glue-up stage. Add polygon-based angled units and their material-yield calculations before advertising chevron, herringbone or tumbling-block construction plans. Optimize reversed/offset rows only when trimming and resulting dimensions are explicitly modeled.
+Verify named examples with accessible primary tutorials; document each actual strip sequence, orientation and glue-up stage. Verify the independently derived composite-unit plans against practical workshop examples. Chevron and herringbone remain unsupported. Optimize reversed/offset rows only when trimming and resulting dimensions are explicitly modeled.
+
+
+The new [composite-unit workflow](composite-units.md) adds triangular pinwheels, tumbling blocks, nested diamonds, and up to four border rings. It uses true polygons and source-prism schedules; this is separate from the original row-panel workflow above.

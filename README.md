@@ -21,8 +21,15 @@ Plans require workshop review before fabrication. There is no nesting optimizer,
 
 ## Panel assembly and borders
 
-The workshop section now also offers an alternative two-glue-up panel schedule: ordered edge-grain strips, source panel lengths, crosscut slice counts, and the end-grain row assembly order. CSV includes both alternatives; choose one construction method. Contiguous same-species cells become rectangular strip runs. Brick and an explicitly labeled houndstooth twill study are available alongside the existing presets. Angled polygon joinery is not implemented.
+The workshop section now also offers an alternative two-glue-up panel schedule: ordered edge-grain strips, source panel lengths, crosscut slice counts, and the end-grain row assembly order. CSV includes both alternatives; choose one construction method. Contiguous same-species cells become rectangular strip runs. Brick and an explicitly labeled houndstooth twill study are available alongside the existing presets. The separate composite-unit workflow adds angled polygon geometry.
 
 An optional outer border has independent width and wood selection; set its width to zero to disable it. Both border widths are deducted from the center dimensions and included in both construction schedules.
 
 See [pattern construction notes](docs/pattern-construction.md) for assumptions, research status, and unsupported pattern families. External woodworking source verification remains pending network access.
+
+
+## Composite-unit designer
+
+Choose **Composite-unit designer** in the app to work with triangular pinwheels, tumbling blocks / 3D cubes, and nested diamonds. Paint individual motif components, repeat them at a physical size, rotate slices, and configure up to four end-grain border rings. The planner generates component angles and dimensions, source-blank batches, crosscuts, numbered placement maps, CSV/SVG exports, and a printable assembly guide.
+
+See [composite-unit design and construction](docs/composite-units.md) for geometry, stock formulas, instructions, and limits. The plans are independently derived from geometry; the source photos do not establish original manufacturing recipes. Cut lists budget rectangular blanks and full cropped units rather than optimized angled-rip yields.

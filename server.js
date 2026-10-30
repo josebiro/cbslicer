@@ -2,7 +2,7 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 const root=resolve(import.meta.dirname);
-const publicFiles=new Set(['/','/index.html','/src/app.js','/src/planner.js','/src/assembly.js','/src/style.css']);
+const publicFiles=new Set(['/','/index.html','/composite.html','/src/composite.js','/src/composite-app.js','/src/composite.css','/src/app.js','/src/planner.js','/src/assembly.js','/src/style.css']);
 http.createServer(async(req,res)=>{
  const pathname=new URL(req.url,'http://localhost').pathname;
  if(!publicFiles.has(pathname)){res.writeHead(404).end('Not found');return;}
