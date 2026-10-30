@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {plan} from '../src/planner.js';
+const c={width:12,length:16,thickness:1.5,border:.75,cols:8,rows:10,kerf:.125,allowance:.125,palette:['walnut','maple'],pattern:'checker',borderWood:'sapele'};
+test('border and center cover exact finished board area',()=>{const p=plan(c);assert.equal(p.total,120);assert.ok(Math.abs(p.cells.reduce((s,g)=>s+g.x*g.y,0)-192)<1e-8);assert.equal(p.cuts.reduce((s,g)=>s+g.count,0),120);assert.equal(p.cells.filter(g=>g.edge).length,40);});
+test('without border all blocks belong to pattern',()=>{const p=plan({...c,border:0});assert.equal(p.total,80);assert.ok(p.cells.every(g=>!g.edge));assert.equal(p.cuts.reduce((s,g)=>s+g.count,0),80);});
+test('rough block volume includes allowance in all three axes',()=>{const p=plan({...c,border:0,cols:1,rows:1});assert.equal(p.volume,12.125*16.125*1.625/144);});
+test('custom block changes cut list while retaining geometry',()=>{const p=plan({...c,overrides:{'0,0':'purpleheart'}});assert.equal(p.cuts.find(g=>g.id==='purpleheart').count,1);assert.equal(p.total,120);});
+test('invalid and degenerate dimensions are rejected',()=>{for(const patch of [{border:6},{width:NaN},{rows:0},{cols:1.5},{thickness:0},{allowance:-1},{palette:[]}])assert.throws(()=>plan({...c,...patch}));});
+test('patterns distribute species as selected',()=>{const p=plan({...c,border:0,pattern:'stripes'});assert.equal(p.cells[0].id,p.cells[8].id);assert.notEqual(p.cells[0].id,p.cells[1].id);});
