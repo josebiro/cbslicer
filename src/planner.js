@@ -7,17 +7,24 @@ export const woods = [
  {id:'oak',name:'White oak',color:'#b79a67'}
 ];
 export function plan(c){
- for(const key of ['width','length','thickness','border','kerf','allowance'])if(!Number.isFinite(c[key])||c[key]<0)throw Error('Enter valid, non-negative dimensions.');
+ c={...c,border2:c.border2??0,borderWood2:c.borderWood2??c.borderWood};
+ for(const key of ['width','length','thickness','border','border2','kerf','allowance'])if(!Number.isFinite(c[key])||c[key]<0)throw Error('Enter valid, non-negative dimensions.');
  if(c.width<=0||c.length<=0||c.thickness<=0||!Number.isInteger(c.cols)||!Number.isInteger(c.rows)||c.cols<1||c.rows<1||c.cols>30||c.rows>30)throw Error('Use positive dimensions and 1–30 rows and columns.');
- if(c.border*2>=Math.min(c.width,c.length))throw Error('The border must leave room for the center pattern.');
- if(!c.palette.length||[...c.palette,c.borderWood].some(id=>!woods.some(w=>w.id===id)))throw Error('Choose a valid wood palette.');
- const b=c.border>0, xs=Array(c.cols).fill((c.width-2*c.border)/c.cols),ys=Array(c.rows).fill((c.length-2*c.border)/c.rows);
+ if((c.border+c.border2)*2>=Math.min(c.width,c.length))throw Error('The border must leave room for the center pattern.');
+ if(!c.palette.length||[...c.palette,c.borderWood,c.borderWood2].some(id=>!woods.some(w=>w.id===id)))throw Error('Choose a valid wood palette.');
+ const b=c.border>0, outer=c.border2>0, layers=Number(b)+Number(outer), margin=c.border+c.border2, xs=Array(c.cols).fill((c.width-2*margin)/c.cols),ys=Array(c.rows).fill((c.length-2*margin)/c.rows);
  if(b){xs.unshift(c.border);xs.push(c.border);ys.unshift(c.border);ys.push(c.border);}
+ if(outer){xs.unshift(c.border2);xs.push(c.border2);ys.unshift(c.border2);ys.push(c.border2);}
  const cells=[], groups=new Map();
  ys.forEach((y,r)=>xs.forEach((x,col)=>{
- const edge=b&&(r===0||col===0||r===ys.length-1||col===xs.length-1),i=col-(b?1:0),j=r-(b?1:0);
+ const outerEdge=outer&&(r===0||col===0||r===ys.length-1||col===xs.length-1);
+ const edge=r<layers||col<layers||r>=ys.length-layers||col>=xs.length-layers,i=col-layers,j=r-layers;
  let p=c.pattern==='stripes'?i:c.pattern==='diagonal'?i+j:c.pattern==='basket'?Math.floor(i/2)+Math.floor(j/2):i+j;
- const id=edge?c.borderWood:(Object.hasOwn(c.overrides||{},`${j},${i}`)?c.overrides[`${j},${i}`]:c.pattern==='blank'?null:c.palette[p%c.palette.length]);
+ const twill=((i-j)%4+4)%4<2;
+ const houndstooth=twill?Math.floor(i/4)%2:Math.floor(j/4)%2;
+ const brick=(Math.floor((i+(j%2)*2)/4)+j)%2;
+ if(c.pattern==='houndstooth'||c.pattern==='brick')p=c.pattern==='houndstooth'?houndstooth:brick;
+ const id=edge?(outerEdge?c.borderWood2:c.borderWood):(Object.hasOwn(c.overrides||{},`${j},${i}`)?c.overrides[`${j},${i}`]:c.pattern==='blank'?null:c.palette[p%c.palette.length]);
  const cell={x,y,r,col,id,edge,key:`${j},${i}`};cells.push(cell);
  if(id===null)return;
  if(!woods.some(w=>w.id===id))throw Error('Choose a valid wood for each block.');
