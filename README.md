@@ -44,3 +44,9 @@ The home page opens with six editable board designs. Filter by pinwheels, cubes,
 In the composite editor, name your board and choose **Save to workbench**. Reopen it from the home page with dimensions, species, all border layers, and unit rotations intact. **Save as new board** keeps a separate variation. Incomplete motifs can also be saved. The shelf holds up to 24 projects in this browser's local storage; no account or cloud sync is required. Save is explicit, not automatic.
 
 Use **Download project** for a portable JSON backup. Import it from the workbench to restore or transfer the design. Removing a saved project asks for confirmation. Browser-storage failures and invalid imports display an error and do not silently replace the shelf. Square-block projects are not included in this persistence feature yet.
+
+## Rotation composer
+
+In the composite editor's preview, choose **Select slices** to build a group directly on the board. Use **All**, **Checkerboard**, **Alternate rows**, or **Invert** to establish a repeating rhythm, then turn the group left or right. Square units turn 90°; cube units turn 120°. Unselected orientations remain intact. **Finish selection** returns to the single-slice rotation brush.
+
+Orientation Undo/Redo retains up to 50 edits during the session, including single-slice rotations and group turns. Switching family, changing unit size, or changing automatic alternation resets orientation history. Saved projects and CSV assembly maps retain the resulting orientations; selection highlights are editing aids and are excluded from print and SVG output.
