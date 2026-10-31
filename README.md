@@ -17,7 +17,7 @@ The development server listens on port 3000; set PORT to change it. Open the ser
 
 All measurements are inches. Patterns use equal-sized center blocks and an optional end-grain border with separate corner blocks. Grain runs along the thickness axis. The first cut list uses individual-block construction; the alternative panel schedule below it uses two glue-ups. Rough dimensions add the selected allowance once per axis. Mill cross-sections to final sizes before gluing, retaining excess height for final flattening. Rough block volume excludes kerf, defects, stock sizing and milling waste; it is not a lumber purchase estimate. The glue-up guide explains kerf budgeting and end-grain flattening.
 
-Plans require workshop review before fabrication. There is no nesting optimizer, saved-project storage, or metric mode yet.
+Plans require workshop review before fabrication. There is no nesting optimizer or metric mode yet. Composite projects can be saved using the workbench.
 
 ## Panel assembly and borders
 
@@ -36,4 +36,11 @@ See [composite-unit design and construction](docs/composite-units.md) for geomet
 
 ## Visual design collection
 
-The home page opens with six editable board designs. Filter by pinwheels, cubes, or diamonds, then select a board to open its exact species, dimensions, rotation scheme, and border configuration in the composite editor. Previews and editor launches share the same preset data and geometry planner. The blank-canvas shortcut opens the original square designer in Blank mode. Designs remain editable for the current session; project saving is not included.
+The home page opens with six editable board designs. Filter by pinwheels, cubes, or diamonds, then select a board to open its exact species, dimensions, rotation scheme, and border configuration in the composite editor. Previews and editor launches share the same preset data and geometry planner. The blank-canvas shortcut opens the original square designer in Blank mode. Composite designs can be saved to the browser workbench and downloaded as portable project files.
+
+
+## Saved-project workbench
+
+In the composite editor, name your board and choose **Save to workbench**. Reopen it from the home page with dimensions, species, all border layers, and unit rotations intact. **Save as new board** keeps a separate variation. Incomplete motifs can also be saved. The shelf holds up to 24 projects in this browser's local storage; no account or cloud sync is required. Save is explicit, not automatic.
+
+Use **Download project** for a portable JSON backup. Import it from the workbench to restore or transfer the design. Removing a saved project asks for confirmation. Browser-storage failures and invalid imports display an error and do not silently replace the shelf. Square-block projects are not included in this persistence feature yet.

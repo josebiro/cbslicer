@@ -7,7 +7,7 @@ Open **Composite-unit designer** from the application navigation. The original s
 1. Choose triangular pinwheels, tumbling blocks, or nested diamonds.
 2. Set the finished board dimensions, thickness, and physical unit size. Square families use the square side; tumbling blocks use the rhombus side. Units are never stretched to fit the board.
 3. Assign species with the component controls or paint the numbered motif diagram. **Clear woods** starts an unassigned composite blank; **Use suggested woods** restores that family's palette. Assign every component to enable print and downloads.
-4. Click units in the board preview to rotate them. Squares turn 90°, hexagonal cube units turn 120°. Triangular layouts can also alternate rotations automatically. Family switching retains that family's edits for the current session; page reload resets designs.
+4. Click units in the board preview to rotate them. Squares turn 90°, hexagonal cube units turn 120°. Triangular layouts can also alternate rotations automatically. Family switching retains that family's edits for the current session; save to the workbench before leaving to preserve the current design.
 5. Configure up to four independent border rings, ordered from inside to outside. A width of zero disables any ring without disabling the others. These rings have end-grain rectangular pieces and butt joints, not the mitered corners visible in some reference photos.
 6. Review the finished component geometry, rectangular source-blank budget, crosscut schedule, and placement map. Print includes the reference end view and map. CSV includes full-precision component polygons, stock dimensions, slice counts, orientations, border positions, and assembly steps; SVG exports the final top view.
 
@@ -48,4 +48,4 @@ The three user-provided photographs establish visual requirements, not the origi
 
 Tests verify polygon area and sampled non-overlap/coverage, rotations, four-ring coverage, exact source lengths and crosscut counts, crop material budgeting, incomplete designs, and export content. Chromium checks cover painting, all families, rotations, border updates, CSV/SVG downloads, print rendering, mobile width, and navigation back to the original designer.
 
-Not implemented: arbitrary polygon drawing, adjustable diamond-frame proportions, chevron/herringbone recipes, metric units, project persistence, or machine-specific machining automation.
+Not implemented: arbitrary polygon drawing, adjustable diamond-frame proportions, chevron/herringbone recipes, metric units, machine-specific machining automation, or saving multiple family variants in a single project.

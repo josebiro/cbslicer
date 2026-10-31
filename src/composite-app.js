@@ -1,3 +1,4 @@
+import {loadProjects,saveProject} from './projects.js';
 import {designs,designConfig} from './designs.js';
 import {woods} from './planner.js';
 import {compositePlan,compositeSteps,compositeCsv,motifGeometry,number as n} from './composite.js';
@@ -65,4 +66,39 @@ if(selectedDesign){
  document.querySelector('.intro h1').textContent=selectedDesign.name;
  document.querySelector('.intro p:not(.eyebrow)').textContent='Your starting point. Change the woods, resize the board, and make it your own.';
 }
+let projectId=null;
+const requestedProject=new URLSearchParams(location.search).get('project');
+if(selectedDesign)$('project-name').value=selectedDesign.name;
+if(requestedProject){
+ try{
+ const project=loadProjects().find(p=>p.id===requestedProject);
+ if(!project)throw Error('This project is not saved in this browser. Import its project file from the workbench.');
+ const config=project.config;
+ $('kind').value=config.kind;
+ for(const id of numeric)$(id).value=config[id]??0;
+ for(const suffix of ['','2','3','4'])$(`borderWood${suffix}`).value=config[`borderWood${suffix}`]||'walnut';
+ savedWoods[config.kind]=[...config.faceWoods];savedRotations[config.kind]=structuredClone(config.rotations||{});
+ $('alternate').checked=Boolean(config.alternate);
+ $('project-name').value=project.name;projectId=project.id;
+ $('project-status').textContent='Saved board opened';
+ document.querySelector('.intro h1').textContent=project.name;
+ }catch(error){$('project-status').textContent=error.message;}
+}
+function persist(asNew){
+ try{
+ if(!current)throw Error('Correct the board dimensions before saving.');
+ const saved=saveProject({version:1,name:$('project-name').value,config:getConfig()},asNew?null:projectId);
+ projectId=saved.id;$('project-name').value=saved.name;
+ history.replaceState(null,'','?project='+encodeURIComponent(projectId));
+ $('project-status').textContent='Saved to your workbench · '+new Date(saved.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ }catch(error){$('project-status').textContent='Could not save: '+error.message;}
+}
+$('save-project').onclick=()=>persist(false);$('copy-project').onclick=()=>persist(true);
+$('export-project').onclick=()=>{if(!current){$('project-status').textContent='Correct the board dimensions before downloading.';return;}download(JSON.stringify({version:1,name:$('project-name').value,config:getConfig()},null,2),'application/json','grain-project.json');};
+document.querySelector('main').addEventListener('input',e=>{if(e.target.closest('.project-toolbar')||e.target.closest('aside'))$('project-status').textContent='Changes not saved';});
+document.querySelector('main').addEventListener('change',e=>{if(e.target.closest('aside'))$('project-status').textContent='Changes not saved';});
+for(const container of ['motif','composite-board'])$(container).addEventListener('click',()=>{$('project-status').textContent='Changes not saved';});
 updateFamily();render();
+
+for(const event of ['click','keydown'])document.querySelector('aside').addEventListener(event,e=>{if(e.target.closest('button')||(event==='keydown'&&['Enter',' '].includes(e.key)&&e.target.closest('[data-face]')))$('project-status').textContent='Changes not saved';});
+$('composite-board').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key))$('project-status').textContent='Changes not saved';});
