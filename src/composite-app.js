@@ -1,3 +1,4 @@
+import {designs,designConfig} from './designs.js';
 import {woods} from './planner.js';
 import {compositePlan,compositeSteps,compositeCsv,motifGeometry,number as n} from './composite.js';
 const $=id=>document.getElementById(id),wood=id=>woods.find(w=>w.id===id), names={triangle:'Triangular pinwheel',cube:'Tumbling blocks',diamond:'Nested diamonds'};
@@ -52,4 +53,16 @@ $('print').onclick=()=>{if(current&&!current.unassigned)window.print();};
 function download(content,type,name){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('download').onclick=()=>{if(current&&!current.unassigned)download(compositeCsv(current),'text/csv','grain-composite-plan.csv');};
 $('svg-download').onclick=()=>{if(!current||current.unassigned)return;const svg=$('composite-board').querySelector('svg').cloneNode(true);svg.querySelectorAll('.map-label').forEach(label=>{label.setAttribute('fill','#fff');label.setAttribute('stroke','#29372e');label.setAttribute('stroke-width','.025');label.setAttribute('paint-order','stroke');label.setAttribute('text-anchor','middle');label.setAttribute('dominant-baseline','central');});download(new XMLSerializer().serializeToString(svg),'image/svg+xml','grain-composite-layout.svg');};
+const selectedDesign=designs.find(d=>d.id===new URLSearchParams(location.search).get('design'));
+if(selectedDesign){
+ const config=designConfig(selectedDesign);
+ $('kind').value=config.kind;
+ for(const id of numeric)$(id).value=config[id];
+ for(const suffix of ['','2','3','4'])$(`borderWood${suffix}`).value=config[`borderWood${suffix}`];
+ savedWoods[config.kind]=[...config.faceWoods];
+ $('alternate').checked=config.alternate;
+ document.title=`${selectedDesign.name} — Grain studio`;
+ document.querySelector('.intro h1').textContent=selectedDesign.name;
+ document.querySelector('.intro p:not(.eyebrow)').textContent='Your starting point. Change the woods, resize the board, and make it your own.';
+}
 updateFamily();render();

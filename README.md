@@ -33,3 +33,7 @@ See [pattern construction notes](docs/pattern-construction.md) for assumptions, 
 Choose **Composite-unit designer** in the app to work with triangular pinwheels, tumbling blocks / 3D cubes, and nested diamonds. Paint individual motif components, repeat them at a physical size, rotate slices, and configure up to four end-grain border rings. The planner generates component angles and dimensions, source-blank batches, crosscuts, numbered placement maps, CSV/SVG exports, and a printable assembly guide.
 
 See [composite-unit design and construction](docs/composite-units.md) for geometry, stock formulas, instructions, and limits. The plans are independently derived from geometry; the source photos do not establish original manufacturing recipes. Cut lists budget rectangular blanks and full cropped units rather than optimized angled-rip yields.
+
+## Visual design collection
+
+The home page opens with six editable board designs. Filter by pinwheels, cubes, or diamonds, then select a board to open its exact species, dimensions, rotation scheme, and border configuration in the composite editor. Previews and editor launches share the same preset data and geometry planner. The blank-canvas shortcut opens the original square designer in Blank mode. Designs remain editable for the current session; project saving is not included.
