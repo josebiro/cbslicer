@@ -60,6 +60,10 @@ Save your board before editing source files: live reload refreshes the page and 
 Optional browser regression checks: `python3 tests/browser_editor.py` with Python Playwright and Chromium installed.
 
 
-## Diamond proportion editor
+## Legacy diamond proportion editor
 
-Choose Nested diamonds in the composite editor (or open The Heirloom/Cinder from the collection). Pattern Architect controls independently adjust both diamond frames, with perpendicular milled-width readouts, a remaining-core dimension, and a radial budget bar. Fine line, Balanced and Bold frame presets establish starting proportions. Changes rebuild the real component polygons, stock envelopes and cut lists; project files preserve both proportions. Existing projects keep their original balanced geometry. Display dimensions round to 0.001 inch; use CSV for full precision and check thin components against your actual tooling.
+Choose Legacy shaped-piece diamonds in the composite editor. Pattern Architect controls independently adjust both diamond frames, with perpendicular milled-width readouts, a remaining-core dimension, and a radial budget bar. Fine line, Balanced and Bold frame presets establish starting proportions. Changes rebuild the real component polygons, stock envelopes and cut lists; project files preserve both proportions. Existing projects keep their original balanced geometry. Display dimensions round to 0.001 inch; use CSV for full precision and check thin components against your actual tooling.
+
+## Laminated A/B diamonds
+
+The primary diamond workflow now starts with **2–4 rectangular laminations per bar**, followed by four centered 45° shaping cuts, crosscuts, and quarter rotation. Edit bars A/B independently and assign either bar to each quarter. Actual milled thicknesses, rectangular stock lists, quarter counts, saved projects and exports all derive from this construction. See [laminated diamond construction](docs/laminated-diamonds.md) for formulas and the accounted 50% shaping loss. Existing 13-piece projects stay compatible under **Legacy shaped-piece diamonds**.

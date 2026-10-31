@@ -2,6 +2,8 @@
 
 Open **Composite-unit designer** from the application navigation. The original square-block designer remains available with its blank canvas and row-panel plans.
 
+**Primary diamond workflow:** see [laminated A/B diamonds](laminated-diamonds.md). The shaped-piece diamond description below is retained for legacy project compatibility.
+
 ## Design a repeat
 
 1. Choose triangular pinwheels, tumbling blocks, or nested diamonds.
@@ -23,7 +25,7 @@ Four right isosceles triangles meet with their 90° corners at a square's center
 
 Three equal 60°/120° rhombi meet at their 120° corners to form a regular hexagon. For rhombus side S, the hexagon is √3S wide and 2S tall. A canonical rhombus has a rectangular envelope 1.5S by √3S/2. Hexagon centers are spaced √3S horizontally and 1.5S vertically, with alternate rows offset horizontally by √3S/2. The three numbered faces are top, lower right, and lower left. Consistent light/medium/dark colors produce the cube illusion.
 
-### Nested diamonds
+### Legacy shaped-piece diamonds
 
 A square unit contains four right-triangle corner fills, two concentric diamond frames, and a square core: 13 component prisms. Default diamond radii are 0.5S, 0.34S, and 0.18S. The Pattern Architect can change both frame proportions. For outer and inner radial shares A and B, the radii become 0.5S, 0.5S(1−A), and 0.5S(1−A−B). Each ring has four mitered trapezoids. For adjacent radii R and r, trapezoid bases are √2R and √2r, and perpendicular thickness is (R−r)/√2, with interior angles 45°/135°. The core side is 0.18√2S. The sliders scale the frame proportions with the unit size and display perpendicular milled widths. Fine line, Balanced, and Bold frame presets are starting points. The UI reserves 5% of radial span for a core; narrow parts still need a workshop feasibility check.
 

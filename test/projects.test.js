@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {saveProject,loadProjects,removeProject,validateProject} from '../src/projects.js';
 import {designs,designConfig} from '../src/designs.js';
 const memory=()=>{let data=null;return {getItem:()=>data,setItem:(_,value)=>data=value};};
-const project=()=>({version:1,name:'My heirloom',config:designConfig(designs[2])});
+const project=()=>({version:1,name:'My heirloom',config:{...designConfig(designs[2]),kind:'diamond'}});
 test('project round trip preserves geometry, species, border layers and rotations',()=>{const store=memory(),value=project();value.config.rotations={'0,0':2};const saved=saveProject(value,null,store);const restored=loadProjects(store)[0];assert.equal(restored.id,saved.id);assert.deepEqual(restored.config,validateProject(value).config);});
 test('save updates an existing board; save as new creates an independent copy',()=>{const store=memory(),saved=saveProject(project(),null,store);const next=project();next.name='Version two';saveProject(next,saved.id,store);assert.equal(loadProjects(store).length,1);saveProject(next,null,store);assert.equal(loadProjects(store).length,2);removeProject(saved.id,store);assert.equal(loadProjects(store).length,1);});
 test('invalid imports and storage failures cannot silently replace saved work',()=>{const store=memory();saveProject(project(),null,store);for(const value of [{version:2}, {...project(),config:{...project().config,size:0}}])assert.throws(()=>saveProject(value,null,store));assert.equal(loadProjects(store).length,1);assert.throws(()=>saveProject(project(),null,{getItem:()=>null,setItem:()=>{throw Error('Storage full');}}),/Storage full/);});

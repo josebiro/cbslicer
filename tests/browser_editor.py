@@ -65,6 +65,20 @@ try:
             assert page.locator('.selected-unit').count() > 0
             page.locator('#turn-right').click()
             page.locator('#rotation-undo').click()
+            page.locator('#kind').select_option('laminated')
+            assert page.locator('#bar-editors .lamination-row').count() == 8
+            page.locator('#quarter-assignments select').nth(1).select_option('B')
+            page.locator('select[aria-label="Bar A layer 1 wood"]').select_option('cherry')
+            page.locator('#save-project').click()
+            page.reload()
+            page.wait_for_selector('#composite-board svg')
+            assert page.locator('#quarter-assignments select').nth(1).input_value() == 'B'
+            assert page.locator('select[aria-label="Bar A layer 1 wood"]').input_value() == 'cherry'
+            with page.expect_download() as downloaded:
+                page.locator('#download').click()
+            content = Path(downloaded.value.path()).read_text()
+            assert 'Quarter position' in content
+            assert 'Rectangular lamination before beveling' in content
             page.goto(base + '/index.html')
             page.locator('.design-card').first.click()
             page.wait_for_selector('#composite-board svg')

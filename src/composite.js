@@ -1,3 +1,4 @@
+import {laminatedMotif,laminatedBlanks,laminationSteps} from './laminated-diamond.js';
 import {woods} from './planner.js';
 const EPS=1e-9;
 export const area=points=>Math.abs(points.reduce((sum,p,i)=>{const q=points[(i+1)%points.length];return sum+p[0]*q[1]-q[0]*p[1];},0))/2;
@@ -52,11 +53,12 @@ export function compositePlan(input){
  for(const key of ['width','length','thickness','size','allowance','kerf','endTrim','stockLength','border','border2','border3','border4']){
   if(!Number.isFinite(c[key])||c[key]<0)throw Error('Enter finite, non-negative dimensions.');
  }
- if(!['triangle','cube','diamond'].includes(c.kind))throw Error('Choose a composite unit.');
+ if(!['triangle','cube','diamond','laminated'].includes(c.kind))throw Error('Choose a composite unit.');
  if([c.width,c.length,c.thickness,c.size,c.stockLength].some(n=>n<=0))throw Error('Board, unit, thickness and stock dimensions must be positive.');
  const margin=c.border+c.border2+c.border3+c.border4,width=c.width-2*margin,height=c.length-2*margin;
  if(width<=0||height<=0)throw Error('Border layers together must leave room for the pattern.');
- const motif=motifGeometry(c.kind,c.size,c.diamondOuterRatio,c.diamondInnerRatio),faceCount=motif.faces.length;
+ const motif=c.kind==='laminated'?laminatedMotif(c.size,c.laminatedBars,c.quarterBars):motifGeometry(c.kind,c.size,c.diamondOuterRatio,c.diamondInnerRatio),faceCount=motif.faces.length;
+ if(c.kind==='laminated')c.faceWoods=motif.ids;
  if(!Array.isArray(c.faceWoods)||c.faceWoods.length!==faceCount||!c.faceWoods.every(id=>id===null||validWood(id))||!validWood(c.borderWood)||!validWood(c.borderWood2)||!validWood(c.borderWood3)||!validWood(c.borderWood4))throw Error('Choose a valid wood for every component.');
  const units=[],rotations=c.rotations||{};
  function add(key,x,y,row,col){
@@ -98,8 +100,9 @@ export function compositePlan(input){
    {name:`Border ${index} right`,id,x:o+ow-depth,y:o+depth,width:depth,height:innerHeight});
   innerWidth=ow;innerHeight=oh;offset=o;
  }
- const schedule=batches(units.length,c), blanks=[];
- for(const [batchIndex,batch] of schedule.entries())for(let face=0;face<faceCount;face++){
+ const stock=c.kind==='laminated'?laminatedBlanks(motif,units.length,c):null;
+ const schedule=stock?.schedule||batches(units.length,c),blanks=stock?.blanks||[];
+ for(const [batchIndex,batch] of (stock?[]:schedule).entries())for(let face=0;face<faceCount;face++){
   if(c.faceWoods[face]===null)continue;
   const part=motif.parts?.[face]||{envelope:motif.envelope,shape:c.kind==='triangle'?'Right isosceles triangle':'60° rhombus',angles:motif.angles};
   blanks.push({batch:`M${batchIndex+1}`,component:`Face ${face+1}`,id:c.faceWoods[face],quantity:1,
@@ -117,6 +120,7 @@ export function compositePlan(input){
 }
 export function compositeSteps(p){
  const {c,motif}=p;
+ if(c.kind==='laminated')return laminationSteps(p);
  return [
   `Use this composite schedule instead of the square-block or row-panel schedules. All grain runs along the source-stock length and becomes the board thickness after crosscutting. The motif cross-section is viewed from the end of the stock.`,
   c.kind==='diamond'?`Build a square composite section ${number(c.size)}″ on each side: four corner triangles surround two concentric diamond frames and a square diamond core. Components 1–4 are the corners; 5–8 the outer frame; 9–12 the inner frame; 13 the core. Each frame is four mitered trapezoids with interior angles 45°/135°. Use the component diagram and exact net dimensions in the table. Assemble each frame around the core with a dry-fit before gluing; this needs additional subassembly glue-ups.`:c.kind==='triangle'?`Prepare four long triangular prisms per composite blank. Each has 45° / 45° / 90° interior angles, two equal legs ${number(motif.edge)}″, and hypotenuse ${number(c.size)}″. Join four 90° corners at the center with hypotenuses facing outward to form a ${number(c.size)}″ square. Faces 1–4 run clockwise from the top.`:
@@ -132,6 +136,6 @@ export function compositeSteps(p){
 }
 export const number=n=>Number(n.toFixed(3)).toString();
 export function compositeCsv(p){
- const rows=[['Composite cutting board plan'],['Unit',p.c.kind],['Finished board W × L × T (in)',p.c.width,p.c.length,p.c.thickness],['Status',p.unassigned?'INCOMPLETE':'Geometry-derived plan; verify machining on scrap'],['Grain direction','Along stock length; perpendicular to finished board face'],['Unit dimension',p.c.size],['Component interior angles',p.motif.angles],...(p.c.kind==='diamond'?[['Outer diamond frame radial share',p.c.diamondOuterRatio??.32],['Inner diamond frame radial share',p.c.diamondInnerRatio??.32]]:[]),[],['Source face','Wood','Finished polygon in reference end-view coordinates (in)'],...p.motif.faces.map((points,i)=>[i+1,p.c.faceWoods[i]||'unassigned',JSON.stringify(points)]),[],['Rough slice thickness',p.sliceThickness],['Kerf per crosscut',p.c.kerf],['End trim at EACH stock end',p.c.endTrim],['Rough blank volume (bd ft)',p.volume],['Stock budget','One rectangular blank per component; excludes defects, extra workholding and long rip losses'],[],['Batch','Component','Wood','Rectangular blanks','Rough envelope W','Rough envelope H','Grain length','Slices','Finished component shape','Interior angles','Net envelope W','Net envelope H','Outer base','Inner base'],...p.blanks.map(b=>[b.batch,b.component,woods.find(w=>w.id===b.id).name,b.quantity,b.width,b.height,b.length,b.slices,b.shape,b.angles||'90°',...(b.netEnvelope||[b.width-p.c.allowance,b.height-p.c.allowance]),b.outerBase??'',b.innerBase??'']),[],['Unit number','Lattice key','Origin X (in)','Origin Y (in)','Clockwise rotation (deg)','Perimeter trim'],...p.units.map(u=>[u.number,u.key,u.x,u.y,u.angle,u.cropped?'yes':'no']),[],['Unit','Source face','Wood','Visible polygon coordinates (board origin top-left, inches)'],...p.units.flatMap(u=>u.faces.map(f=>[u.number,f.source+1,f.id||'unassigned',JSON.stringify(f.points)])),[],['Border piece','Wood','Finished X','Finished Y','Origin X','Origin Y'],...p.frames.map(f=>[f.name,f.id,f.width,f.height,f.x,f.y]),[],['Step','Instructions'],...compositeSteps(p).map((step,i)=>[i+1,step])];
+ const rows=[['Composite cutting board plan'],['Unit',p.c.kind],['Finished board W × L × T (in)',p.c.width,p.c.length,p.c.thickness],['Status',p.unassigned?'INCOMPLETE':'Geometry-derived plan; verify machining on scrap'],['Grain direction','Along stock length; perpendicular to finished board face'],['Unit dimension',p.c.size],['Component interior angles',p.motif.angles],...(p.c.kind==='diamond'?[['Outer diamond frame radial share',p.c.diamondOuterRatio??.32],['Inner diamond frame radial share',p.c.diamondInnerRatio??.32]]:[]),[],[p.c.kind==='laminated'?'Visible region (not a separate cut)':'Source face','Wood','Finished polygon in reference end-view coordinates (in)'],...p.motif.faces.map((points,i)=>[i+1,p.c.faceWoods[i]||'unassigned',JSON.stringify(points)]),[],['Rough slice thickness',p.sliceThickness],['Kerf per crosscut',p.c.kerf],['End trim at EACH stock end',p.c.endTrim],['Rough blank volume (bd ft)',p.volume],['Stock budget',p.c.kind==='laminated'?'Rectangular lamination blanks before 45-degree shaping; includes corner-offcut loss; excludes extra workholding and long rip losses':'One rectangular blank per component; excludes defects, extra workholding and long rip losses'],...(p.c.kind==='laminated'?[['Visible region','Source bar','Layer order','Quarter index'],...p.motif.meta.map((m,i)=>[i+1,m.bar,m.layer+1,m.quarter+1]),[],['Quarter position','Bar','Clockwise rotation'],...p.motif.quarters.map((bar,i)=>[['top-left','top-right','bottom-right','bottom-left'][i],bar,i*90]),[],['Bar','Layer order','Wood','Finished width','Finished thickness'],...['A','B'].flatMap(bar=>p.motif.stacks[bar].strips.map(strip=>[bar,strip.order,strip.wood,strip.width,strip.thickness]))]:[]),[],['Batch','Component','Wood','Rectangular blanks','Rough envelope W','Rough envelope H','Grain length','Slices','Finished component shape','Interior angles','Net envelope W','Net envelope H','Outer base','Inner base'],...p.blanks.map(b=>[b.batch,b.component,woods.find(w=>w.id===b.id).name,b.quantity,b.width,b.height,b.length,b.slices,b.shape,b.angles||'90°',...(b.netEnvelope||[b.width-p.c.allowance,b.height-p.c.allowance]),b.outerBase??'',b.innerBase??'']),[],['Unit number','Lattice key','Origin X (in)','Origin Y (in)','Clockwise rotation (deg)','Perimeter trim'],...p.units.map(u=>[u.number,u.key,u.x,u.y,u.angle,u.cropped?'yes':'no']),[],['Unit','Source face','Wood','Visible polygon coordinates (board origin top-left, inches)'],...p.units.flatMap(u=>u.faces.map(f=>[u.number,f.source+1,f.id||'unassigned',JSON.stringify(f.points)])),[],['Border piece','Wood','Finished X','Finished Y','Origin X','Origin Y'],...p.frames.map(f=>[f.name,f.id,f.width,f.height,f.x,f.y]),[],['Step','Instructions'],...compositeSteps(p).map((step,i)=>[i+1,step])];
  return rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
 }
