@@ -29,7 +29,15 @@ try:
             page.wait_for_selector('#composite-board svg')
             assert page.locator('#editor-startup').is_hidden()
             for kind, count in [('triangle', 4), ('cube', 3), ('diamond', 13)]:
-                page.locator('#kind').select_option(kind)
+                # Old geometry is offered only while opening an archived project.
+                page.evaluate('''async kind => {
+                  const {designConfig,designs}=await import('./src/designs.js');
+                  const config=designConfig(designs[2]);config.kind=kind;
+                  config.faceWoods=kind==='triangle'?['maple','walnut','cherry','purpleheart']:kind==='cube'?['maple','sapele','walnut']:[...Array(4).fill('purpleheart'),...Array(4).fill('maple'),...Array(4).fill('walnut'),'maple'];
+                  localStorage.setItem('grain.projects.v1',JSON.stringify([{version:1,name:'Compatibility fixture',id:'compatibility',updated:'2026-01-01',config}]));
+                }''',kind)
+                page.goto(base + '/composite.html?project=compatibility')
+                page.wait_for_selector('#composite-board svg')
                 assert page.locator('#motif [data-face]').count() == count
                 page.locator('#brush').select_option('purpleheart')
                 page.locator('#motif [data-face="0"]').focus()
@@ -66,13 +74,20 @@ try:
             page.locator('#turn-right').click()
             page.locator('#rotation-undo').click()
             page.locator('#kind').select_option('laminated')
+            for assembly in ['strips','squares']:
+                for shaping in ['none','bevel45']:
+                    page.locator('#bar-assembly').select_option(assembly)
+                    page.locator('#bar-shaping').select_option(shaping)
+                    assert page.locator('#status').inner_text() == ''
+                    assert page.locator('#composite-board svg').count() == 1
+            page.locator('#bar-assembly').select_option('strips')
             assert page.locator('#bar-editors .lamination-row').count() == 8
-            page.locator('#quarter-assignments select').nth(1).select_option('B')
+            page.locator('#quarter-assignments [data-quarter]').nth(1).select_option('B')
             page.locator('select[aria-label="Bar A layer 1 wood"]').select_option('cherry')
             page.locator('#save-project').click()
             page.reload()
             page.wait_for_selector('#composite-board svg')
-            assert page.locator('#quarter-assignments select').nth(1).input_value() == 'B'
+            assert page.locator('#quarter-assignments [data-quarter]').nth(1).input_value() == 'B'
             assert page.locator('select[aria-label="Bar A layer 1 wood"]').input_value() == 'cherry'
             with page.expect_download() as downloaded:
                 page.locator('#download').click()

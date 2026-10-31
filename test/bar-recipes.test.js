@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {laminatedMotif,defaultBars} from '../src/laminated-diamond.js';
+import {compositePlan,area,compositeCsv} from '../src/composite.js';
+import {designConfig,designs} from '../src/designs.js';
+const c=designConfig(designs[2]);
+for(const assembly of ['strips','squares'])for(const shaping of ['none','bevel45'])test(`${assembly}/${shaping}: source geometry, coverage and yield are consistent`,()=>{const bars=defaultBars(),p=compositePlan({...c,barAssembly:assembly,barShaping:shaping,quarterTurns:[0,0,0,0]});assert.ok(Math.abs(p.motif.faces.reduce((s,f)=>s+area(f),0)-c.size**2)<1e-8);assert.ok(Math.abs(p.motif.barSpan-(shaping==='none'?c.size/2:c.size/Math.SQRT2))<1e-8);assert.ok(Math.abs(p.units.reduce((s,u)=>s+u.visibleArea,0)-p.centerWidth*p.centerHeight)<1e-8);if(assembly==='squares')for(const part of p.motif.stacks.A.strips){assert.equal(part.width,p.motif.barSpan/2);assert.equal(part.thickness,p.motif.barSpan/2);}assert.match(compositeCsv(p),new RegExp(shaping));});
+test('four-square glue-up becomes four triangles after centered shaping',()=>{const m=laminatedMotif(4,defaultBars(),undefined,{assembly:'squares',shaping:'bevel45'});m.faces.forEach(f=>{assert.ok(Math.abs(area(f)-1)<1e-8);});});
+test('unshaped stock has half the net section area of stock required for the same shaped slice',()=>{const raw=laminatedMotif(4,undefined,undefined,{shaping:'none'}),beveled=laminatedMotif(4);assert.ok(Math.abs(raw.barSpan**2*2-beveled.barSpan**2)<1e-8);});
+test('straight quarter orientation makes continuous horizontal strip bands',()=>{const m=laminatedMotif(4,undefined,undefined,{shaping:'none',quarterTurns:[0,0,0,0]});assert.deepEqual(m.quarterTurns,[0,0,0,0]);assert.equal(m.faces[0][0][1],0);});
+test('invalid recipes and non-quarter rotations are rejected',()=>{assert.throws(()=>laminatedMotif(4,undefined,undefined,{shaping:'60'}));assert.throws(()=>laminatedMotif(4,undefined,undefined,{quarterTurns:[0,0,0,4]}));});

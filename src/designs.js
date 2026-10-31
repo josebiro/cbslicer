@@ -9,6 +9,7 @@ export const designs = [
 ];
 export function designConfig(design){
  const c={thickness:1.5,allowance:.125,kerf:.125,endTrim:.25,stockLength:36,border:0,border2:0,border3:0,border4:0,borderWood:'walnut',borderWood2:'maple',borderWood3:'maple',borderWood4:'walnut',rotations:{},...structuredClone(design)};
+ if(c.kind==='triangle'){c.kind='laminated';c.barAssembly='squares';c.barShaping='bevel45';c.alternate=false;c.quarterTurns=[0,1,2,3];c.size*=2;const A=c.faceWoods.map(wood=>({wood,weight:1}));c.laminatedBars={A,B:structuredClone(A)};c.quarterBars=['A','A','A','A'];}
  if(c.kind==='laminated'&&!c.laminatedBars){const A=[0,4,8,12].map((index,i)=>({wood:c.faceWoods[index],weight:[50,16,16,18][i]}));c.laminatedBars={A,B:structuredClone(A).reverse()};c.quarterBars=['A','A','A','A'];}
  return c;
 }
