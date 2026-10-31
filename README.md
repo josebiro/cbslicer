@@ -60,3 +60,9 @@ Tests cover geometry, coverage, source-stock counts/yield, rotations, recipe set
 ```sh
 python3 tests/browser_editor.py
 ```
+
+Each bar's layer composer includes a live source/slice preview and lists the quarters using it. An unused bar still previews its own edits but does not alter the finished board until assigned; an explicit action can assign it to the top-right quarter. Thickness edits update immediately without leaving the input. Browser coverage for layer reordering, source previews, assigned/unassigned bars and edit-then-arrow interactions is available with the dev server running:
+
+```sh
+python3 tests/browser_layer_previews.py
+```

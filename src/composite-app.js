@@ -15,7 +15,7 @@ let selectionMode=false,selection=new Set(),orientationUndo=[],orientationRedo=[
 const options=(selected,empty=true)=>(empty?`<option value="" ${selected===null?'selected':''}>Unassigned</option>`:'')+woods.map(w=>`<option value="${w.id}" ${w.id===selected?'selected':''}>${w.name}</option>`).join('');
 $('brush').innerHTML=options('walnut');
 $('border-controls').innerHTML=Array.from({length:4},(_,i)=>{const suffix=i===0?'':i+1;return `<div class="fields border-fields"><label>Ring ${i+1} width (in)<input id="border${suffix}" type="number" value="${i===0?.5:0}" min="0" step="0.125"></label><label>Ring ${i+1} wood<select id="borderWood${suffix}">${options(['walnut','maple','purpleheart','walnut'][i],false)}</select></label></div>`;}).join('');
-function getConfig(){return {...Object.fromEntries(numeric.map(id=>[id,Number($(id).value)])),kind:$('kind').value,laminatedBars,quarterBars,barAssembly,barShaping,quarterTurns,diamondOuterRatio,diamondInnerRatio,faceWoods:savedWoods[$('kind').value],rotations:savedRotations[$('kind').value],alternate:$('alternate').checked,...Object.fromEntries(['','2','3','4'].map(suffix=>[`borderWood${suffix}`,$(`borderWood${suffix}`).value]))};}
+function getConfig(){return {...Object.fromEntries(numeric.map(id=>[id,Number($(id).value)])),kind:$('kind').value,laminatedBars:structuredClone(laminatedBars),quarterBars:[...quarterBars],barAssembly,barShaping,quarterTurns:[...quarterTurns],diamondOuterRatio,diamondInnerRatio,faceWoods:savedWoods[$('kind').value],rotations:savedRotations[$('kind').value],alternate:$('alternate').checked,...Object.fromEntries(['','2','3','4'].map(suffix=>[`borderWood${suffix}`,$(`borderWood${suffix}`).value]))};}
 function svgDefs(){return '<defs><pattern id="empty-component" patternUnits="userSpaceOnUse" width="0.18" height="0.18"><rect width="0.18" height="0.18" fill="#f3f3ec"/><path d="M0 0L.18 .18M.18 0L0 .18" stroke="#c3c9b8" stroke-width=".01"/></pattern></defs>';}
 function polygon(points,id,attrs=''){return `<polygon points="${points.map(p=>p.join(',')).join(' ')}" fill="${id===null?'url(#empty-component)':wood(id).color}" ${attrs}/>`;}
 function updateFamily(){
@@ -32,13 +32,14 @@ function updateFamily(){
  const groups=kind==='diamond'?[['Corner triangles',[0,1,2,3]],['Outer diamond frame',[4,5,6,7]],['Inner diamond frame',[8,9,10,11]],['Diamond core',[12]]]:savedWoods[kind].map((_,i)=>[`Face ${i+1}`,[i]]);
  $('face-controls').innerHTML=groups.map(([label,indexes])=>{const values=indexes.map(i=>savedWoods[kind][i]),mixed=new Set(values).size>1;return `<label>${label}<select data-faces="${indexes.join(',')}">${mixed?'<option selected value="mixed">Mixed — painted faces</option>':''}${options(mixed?'mixed':values[0])}</select></label>`;}).join('');
 }
-function render(){
+function render(preserveLayers=false){
+ preserveLayers=preserveLayers===true;
  try{current=compositePlan(getConfig());}catch(e){current=null;$('status').textContent=e.message;$('status').className='invalid';$('composite-board').innerHTML='';$('motif').innerHTML='';$('plan-content').innerHTML='';$('dimension').textContent='';for(const id of ['count','trim-count','volume'])$(id).textContent='—';for(const id of ['print','download','svg-download'])$(id).disabled=true;return;}
  const p=current,{c,motif}=p,kind=c.kind;
  selection=new Set([...selection].filter(key=>p.units.some(u=>u.key===key)));
  updateComposer();
  updateDiamondArchitect();
- updateLaminatedEditor();
+ updateLaminatedEditor(preserveLayers);
  for(const id of ['print','download','svg-download'])$(id).disabled=Boolean(p.unassigned);
  $('status').className=p.unassigned?'incomplete':'';
  $('status').textContent=p.unassigned?`Assign wood to ${p.unassigned} component${p.unassigned===1?'':'s'} to complete the blank and unlock the workshop plan.`:'';
@@ -161,18 +162,40 @@ $('diamond-outer').oninput=()=>{diamondOuterRatio=Number($('diamond-outer').valu
 $('diamond-inner').oninput=()=>{diamondInnerRatio=Number($('diamond-inner').value)/100;render();$('project-status').textContent='Changes not saved';};
 document.querySelector('.architect-presets').onclick=e=>{const button=e.target.closest('[data-proportion]');if(!button)return;[diamondOuterRatio,diamondInnerRatio]={fine:[.12,.12],balanced:[.32,.32],bold:[.52,.18]}[button.dataset.proportion];render();$('project-status').textContent='Changes not saved';};
 
-function updateLaminatedEditor(){
+function updateLaminatedEditor(preserveLayers=false){
  if(current?.c.kind!=='laminated')return;
  const p=current;
  $('bar-assembly').value=barAssembly;$('bar-shaping').value=barShaping;
  $('recipe-summary').textContent=(barAssembly==='squares'?'Four equal square sections':'Two to four parallel layers')+(barShaping==='none'?' → retain the square cross-section (no shaping loss).':' → centered 45° shaping → square slices (50% of milled area retained).');
- $('bar-editors').innerHTML=['A','B'].map(key=>`<section class="bar-editor"><h3>Bar ${key} · layer 1 → last layer</h3>${laminatedBars[key].map((layer,i)=>`<div class="lamination-row"><span>${i+1}</span><select aria-label="Bar ${key} layer ${i+1} wood" data-bar="${key}" data-layer="${i}" data-field="wood">${options(layer.wood,false)}</select><label>Relative thickness<input aria-label="Bar ${key} layer ${i+1} relative thickness" data-bar="${key}" data-layer="${i}" data-field="weight" type="number" min="1" value="${barAssembly==='squares'?1:layer.weight}" ${barAssembly==='squares'?'disabled':''}></label><strong>${n(p.motif.stacks[key].strips[i].thickness)}″ milled</strong><button data-move="-1" data-bar="${key}" data-layer="${i}" ${i===0?'disabled':''} aria-label="Move bar ${key} layer ${i+1} up">↑</button><button data-move="1" data-bar="${key}" data-layer="${i}" ${i===laminatedBars[key].length-1?'disabled':''} aria-label="Move bar ${key} layer ${i+1} down">↓</button><button data-remove="1" data-bar="${key}" data-layer="${i}" ${barAssembly==='squares'||laminatedBars[key].length<=2?'disabled':''}>Remove</button></div>`).join('')}<button data-add="${key}" ${barAssembly==='squares'||laminatedBars[key].length>=4?'disabled':''}>Add lamination</button></section>`).join('');
+ if(!preserveLayers)$('bar-editors').innerHTML=['A','B'].map(key=>`<section class="bar-editor"><h3>Bar ${key} · layer 1 → last layer</h3><div class="bar-live-preview" data-live-bar="${key}"></div>${laminatedBars[key].map((layer,i)=>`<div class="lamination-row"><span>${i+1}</span><select aria-label="Bar ${key} layer ${i+1} wood" data-bar="${key}" data-layer="${i}" data-field="wood">${options(layer.wood,false)}</select><label>Relative thickness<input aria-label="Bar ${key} layer ${i+1} relative thickness" data-bar="${key}" data-layer="${i}" data-field="weight" type="number" min="1" value="${barAssembly==='squares'?1:layer.weight}" ${barAssembly==='squares'?'disabled':''}></label><strong data-milled-bar="${key}" data-milled-layer="${i}">${n(p.motif.stacks[key].strips[i].thickness)}″ milled</strong><button data-move="-1" data-bar="${key}" data-layer="${i}" ${i===0?'disabled':''} aria-label="Move bar ${key} layer ${i+1} up">↑</button><button data-move="1" data-bar="${key}" data-layer="${i}" ${i===laminatedBars[key].length-1?'disabled':''} aria-label="Move bar ${key} layer ${i+1} down">↓</button><button data-remove="1" data-bar="${key}" data-layer="${i}" ${barAssembly==='squares'||laminatedBars[key].length<=2?'disabled':''}>Remove</button></div>`).join('')}<button data-add="${key}" ${barAssembly==='squares'||laminatedBars[key].length>=4?'disabled':''}>Add lamination</button></section>`).join('');
  $('quarter-assignments').innerHTML=['Top left','Top right','Bottom right','Bottom left'].map((name,i)=>`<label>${name}<select data-quarter="${i}"><option ${quarterBars[i]==='A'?'selected':''}>A</option><option ${quarterBars[i]==='B'?'selected':''}>B</option></select><select aria-label="${name} rotation" data-quarter-turn="${i}">${[0,1,2,3].map(t=>`<option value="${t}" ${quarterTurns[i]===t?'selected':''}>${t*90}° clockwise</option>`).join('')}</select></label>`).join('');
- $('bar-process').innerHTML=['A','B'].map(key=>{const stack=p.motif.stacks[key],H=p.motif.barSpan,q=p.motif.quarterSide,m=laminatedMotif(p.c.size,laminatedBars,[key,key,key,key],{assembly:barAssembly,shaping:barShaping,quarterTurns:[0,0,0,0]});return `<div><h3>Bar ${key}: straight glue-up → ${barShaping==='none'?'no shaping':'four 45° cuts'} → square</h3><div class="bar-diagrams"><svg viewBox="0 0 ${H} ${H}" aria-label="Bar ${key} straight lamination stack">${stack.strips.map(layer=>`<rect x="${layer.x||0}" y="${layer.y??layer.offset}" width="${layer.width}" height="${layer.thickness}" fill="${wood(layer.wood).color}"/>`).join('')}${barShaping==='bevel45'?`<polygon points="${H/2},0 ${H},${H/2} ${H/2},${H} 0,${H/2}" fill="none" stroke="white" stroke-width=".025" stroke-dasharray=".08 .04"/>`:''}</svg><span>→</span><svg viewBox="0 0 ${q} ${q}" aria-label="Bar ${key} shaped square end view">${m.faces.filter((_,i)=>m.meta[i].quarter===0).map((points,i)=>polygon(points,m.ids[i])).join('')}</svg></div><p>${n(H)}″ × ${n(H)}″ milled stack → ${n(q)}″ square quarter. Diagram is an end view; grain runs into the page. Layer 1 starts at the upper-left corner of the square.</p></div>`;}).join('');
+ $('bar-process').innerHTML=['A','B'].map(key=>{const stack=p.motif.stacks[key],H=p.motif.barSpan,q=p.motif.quarterSide,m=laminatedMotif(p.c.size,p.c.laminatedBars,[key,key,key,key],{assembly:p.motif.assembly,shaping:p.motif.shaping,quarterTurns:[0,0,0,0]});return `<div><h3>Bar ${key}: straight glue-up → ${barShaping==='none'?'no shaping':'four 45° cuts'} → square</h3><div class="bar-diagrams"><svg viewBox="0 0 ${H} ${H}" aria-label="Bar ${key} straight lamination stack">${stack.strips.map(layer=>`<rect x="${layer.x||0}" y="${layer.y??layer.offset}" width="${layer.width}" height="${layer.thickness}" fill="${wood(layer.wood).color}"/>`).join('')}${barShaping==='bevel45'?`<polygon points="${H/2},0 ${H},${H/2} ${H/2},${H} 0,${H/2}" fill="none" stroke="white" stroke-width=".025" stroke-dasharray=".08 .04"/>`:''}</svg><span>→</span><svg viewBox="0 0 ${q} ${q}" aria-label="Bar ${key} shaped square end view">${m.faces.filter((_,i)=>m.meta[i].quarter===0).map((points,i)=>polygon(points,m.ids[i])).join('')}</svg></div><p>${n(H)}″ × ${n(H)}″ milled stack → ${n(q)}″ square quarter. Diagram is an end view; grain runs into the page. Layer 1 starts at the upper-left corner of the square.</p></div>`;}).join('');
+ const quarterNames=['top-left','top-right','bottom-right','bottom-left'];
+ for(const key of ['A','B']){
+  const source=$('bar-process').children[key==='A'?0:1];
+  const uses=quarterBars.flatMap((bar,i)=>bar===key?[quarterNames[i]]:[]);
+  const target=document.querySelector(`[data-live-bar="${key}"]`);
+  target.innerHTML=`<div class="bar-usage ${uses.length?'':'unused'}">${uses.length?`Used in ${uses.length} quarter${uses.length===1?'':'s'}: ${uses.join(', ')}`:`Not used in the board. This preview still updates as you edit.`}${uses.length?'':`<button data-use-bar="${key}">Use ${key} in top-right quarter</button>`}</div>${source.querySelector('.bar-diagrams').outerHTML}<p class="hint">Live source section → slice before rotation</p>`;
+  for(const [i,strip] of p.motif.stacks[key].strips.entries()){const output=document.querySelector(`[data-milled-bar="${key}"][data-milled-layer="${i}"]`);if(output)output.textContent=`${n(strip.thickness)}″ milled`;}
+ }
  $('count').textContent=`${p.units.length} repeats / ${p.units.length*4} quarters`;
 }
-$('bar-editors').onchange=e=>{const t=e.target;if(!t.dataset.field)return;const layer=laminatedBars[t.dataset.bar][Number(t.dataset.layer)];if(t.dataset.field==='weight'&&(!Number.isFinite(Number(t.value))||Number(t.value)<=0)){t.setCustomValidity('Use a positive relative thickness.');t.reportValidity();return;}t.setCustomValidity('');layer[t.dataset.field]=t.dataset.field==='weight'?Number(t.value):t.value;render();$('project-status').textContent='Changes not saved';};
-$('bar-editors').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.add)laminatedBars[b.dataset.add].push({wood:'maple',weight:20});else{const layers=laminatedBars[b.dataset.bar],i=Number(b.dataset.layer);if(b.dataset.remove)layers.splice(i,1);else{const j=i+Number(b.dataset.move);[layers[i],layers[j]]=[layers[j],layers[i]];}}render();$('project-status').textContent='Changes not saved';};
+function commitLayerField(t){
+ if(!t.dataset.field)return;
+ if(t.dataset.field==='weight'&&(!Number.isFinite(Number(t.value))||Number(t.value)<=0)){t.setCustomValidity('Use a positive relative thickness.');return;}
+ t.setCustomValidity('');
+ laminatedBars[t.dataset.bar][Number(t.dataset.layer)][t.dataset.field]=t.dataset.field==='weight'?Number(t.value):t.value;
+ render(true);$('project-status').textContent='Changes not saved';
+}
+$('bar-editors').oninput=e=>{if(e.target.dataset.field==='weight')commitLayerField(e.target);};
+$('bar-editors').onchange=e=>{if(e.target.dataset.field==='wood')commitLayerField(e.target);};
+$('bar-editors').onclick=e=>{
+ const b=e.target.closest('button');if(!b||b.disabled)return;
+ if(b.dataset.useBar){quarterBars[1]=b.dataset.useBar;render();$('project-status').textContent='Changes not saved';return;}
+ if(b.dataset.add)laminatedBars[b.dataset.add].push({wood:'maple',weight:20});
+ else {const key=b.dataset.bar,layers=[...laminatedBars[key]],i=Number(b.dataset.layer);if(b.dataset.remove)layers.splice(i,1);else{const j=i+Number(b.dataset.move);if(j<0||j>=layers.length)return;[layers[i],layers[j]]=[layers[j],layers[i]];}laminatedBars={...laminatedBars,[key]:layers};}
+ render();$('project-status').textContent='Changes not saved';
+};
 $('reverse-bar-b').onclick=()=>{laminatedBars.B=structuredClone(laminatedBars.A).reverse();render();$('project-status').textContent='Changes not saved';};
 $('quarter-assignments').onchange=e=>{if(e.target.dataset.quarterTurn!==undefined)quarterTurns[Number(e.target.dataset.quarterTurn)]=Number(e.target.value);else if(e.target.dataset.quarter!==undefined)quarterBars[Number(e.target.dataset.quarter)]=e.target.value;else return;render();$('project-status').textContent='Changes not saved';};
 function renderLaminatedPlan(p){
