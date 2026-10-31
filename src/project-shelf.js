@@ -9,7 +9,7 @@ function show(){
  if(!projects.length){const empty=document.createElement('p');empty.className='shelf-empty';empty.textContent='Your next heirloom starts here. Open a collection design, make it yours, then save it to your workbench.';shelf.append(empty);return;}
  for(const project of projects){
   const p=compositePlan(project.config),article=document.createElement('article');article.className='saved-board';
-  const link=document.createElement('a');link.href='/composite.html?project='+encodeURIComponent(project.id);
+  const link=document.createElement('a');link.href='./composite.html?project='+encodeURIComponent(project.id);
   const preview=document.createElement('div');preview.className='saved-preview';
   preview.innerHTML=`<svg viewBox="0 0 ${p.c.width} ${p.c.length}" aria-hidden="true">${p.frames.map(f=>`<rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" fill="${woods.find(w=>w.id===f.id).color}"/>`).join('')}${p.units.flatMap(u=>u.faces.map(f=>`<polygon points="${f.points.map(point=>point.join(',')).join(' ')}" fill="${woods.find(w=>w.id===f.id)?.color||'#d5d9cd'}"/>`)).join('')}</svg>`;
   const name=document.createElement('h3');name.textContent=project.name;

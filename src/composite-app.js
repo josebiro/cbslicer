@@ -121,3 +121,6 @@ function turnGroup(step){if(!current||!selection.size)return;rememberOrientation
 $('turn-left').onclick=()=>turnGroup(-1);$('turn-right').onclick=()=>turnGroup(1);
 function travelOrientation(undo){const from=undo?orientationUndo:orientationRedo,to=undo?orientationRedo:orientationUndo;if(!from.length)return;to.push(structuredClone(savedRotations[$('kind').value]));savedRotations[$('kind').value]=from.pop();orientationChanged();}
 $('rotation-undo').onclick=()=>travelOrientation(true);$('rotation-redo').onclick=()=>travelOrientation(false);
+
+document.documentElement.dataset.editorReady='true';
+$('editor-startup').hidden=true;

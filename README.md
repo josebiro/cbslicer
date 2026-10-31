@@ -50,3 +50,11 @@ Use **Download project** for a portable JSON backup. Import it from the workbenc
 In the composite editor's preview, choose **Select slices** to build a group directly on the board. Use **All**, **Checkerboard**, **Alternate rows**, or **Invert** to establish a repeating rhythm, then turn the group left or right. Square units turn 90°; cube units turn 120°. Unselected orientations remain intact. **Finish selection** returns to the single-slice rotation brush.
 
 Orientation Undo/Redo retains up to 50 edits during the session, including single-slice rotations and group turns. Switching family, changing unit size, or changing automatic alternation resets orientation history. Saved projects and CSV assembly maps retain the resulting orientations; selection highlights are editing aids and are excluded from print and SVG output.
+
+## Live reload
+
+Use Node.js 24 and run `npm run dev`. Development mode watches server code, restarts the server when it changes, and automatically refreshes connected browsers when HTML, JavaScript or CSS changes. After pulling an update to the dev command itself, stop the old process with Ctrl+C and run `npm run dev` again. `npm start` runs without watching or injecting the development reload client.
+
+Save your board before editing source files: live reload refreshes the page and does not preserve unsaved editor changes. The editor also displays recovery instructions if a script cannot load. Assets use relative URLs so static deployments under a repository subpath can load the editor correctly.
+
+Optional browser regression checks: `python3 tests/browser_editor.py` with Python Playwright and Chromium installed.
