@@ -58,3 +58,8 @@ Use Node.js 24 and run `npm run dev`. Development mode watches server code, rest
 Save your board before editing source files: live reload refreshes the page and does not preserve unsaved editor changes. The editor also displays recovery instructions if a script cannot load. Assets use relative URLs so static deployments under a repository subpath can load the editor correctly.
 
 Optional browser regression checks: `python3 tests/browser_editor.py` with Python Playwright and Chromium installed.
+
+
+## Diamond proportion editor
+
+Choose Nested diamonds in the composite editor (or open The Heirloom/Cinder from the collection). Pattern Architect controls independently adjust both diamond frames, with perpendicular milled-width readouts, a remaining-core dimension, and a radial budget bar. Fine line, Balanced and Bold frame presets establish starting proportions. Changes rebuild the real component polygons, stock envelopes and cut lists; project files preserve both proportions. Existing projects keep their original balanced geometry. Display dimensions round to 0.001 inch; use CSV for full precision and check thin components against your actual tooling.

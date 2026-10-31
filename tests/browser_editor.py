@@ -45,6 +45,21 @@ try:
                 assert page.locator('#motif [data-face="0"] polygon').get_attribute('fill') == '#e8c995'
                 page.locator('#reset').click()
                 assert page.locator('#download').is_enabled()
+            assert page.locator('#diamond-architect').is_visible()
+            original_motif = page.locator('#motif svg').inner_html()
+            page.get_by_role('button', name='Fine line', exact=True).click()
+            assert page.locator('#diamond-outer').input_value() == '12'
+            assert page.locator('#motif svg').inner_html() != original_motif
+            page.get_by_role('button', name='Bold frame', exact=True).click()
+            assert page.locator('#diamond-outer').input_value() == '52'
+            assert page.locator('#diamond-inner').input_value() == '18'
+            page.locator('#save-project').click()
+            page.reload()
+            page.wait_for_selector('#motif svg')
+            assert page.locator('#diamond-outer').input_value() == '52'
+            assert page.locator('#diamond-inner').input_value() == '18'
+            page.locator('#diamond-outer').evaluate("el=>{el.value='40';el.dispatchEvent(new Event('input',{bubbles:true}));}")
+            assert page.locator('#diamond-outer').input_value() == '40'
             page.locator('#selection-mode').click()
             page.get_by_role('button', name='Checkerboard', exact=True).click()
             assert page.locator('.selected-unit').count() > 0

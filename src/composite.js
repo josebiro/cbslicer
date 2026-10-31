@@ -15,11 +15,12 @@ export function clipRect(points,width,height){
  }
  return result;
 }
-export function motifGeometry(kind,size){
+export function motifGeometry(kind,size,outerRatio=.32,innerRatio=.32){
  if(kind==='diamond'){
   const center=[size/2,size/2],corners=[[0,0],[size,0],[size,size],[0,size]],outer=[[size/2,0],[size,size/2],[size/2,size],[0,size/2]];
   const faces=corners.map((corner,i)=>[corner,outer[i],outer[(i+3)%4]]),parts=faces.map(()=>({shape:'Right triangle',angles:'45° / 45° / 90°',envelope:[size/2,size/2]}));
-  const radii=[size/2,size*.34,size*.18];
+  if(!Number.isFinite(outerRatio)||!Number.isFinite(innerRatio)||outerRatio<=0||innerRatio<=0||outerRatio+innerRatio>=1)throw Error('Diamond frames must have positive widths and leave a positive core.');
+  const radii=[size/2,size/2*(1-outerRatio),size/2*(1-outerRatio-innerRatio)];
   for(let ring=0;ring<2;ring++){
    const points=radius=>[[size/2,size/2-radius],[size/2+radius,size/2],[size/2,size/2+radius],[size/2-radius,size/2]];
    const a=points(radii[ring]),b=points(radii[ring+1]);
@@ -55,7 +56,7 @@ export function compositePlan(input){
  if([c.width,c.length,c.thickness,c.size,c.stockLength].some(n=>n<=0))throw Error('Board, unit, thickness and stock dimensions must be positive.');
  const margin=c.border+c.border2+c.border3+c.border4,width=c.width-2*margin,height=c.length-2*margin;
  if(width<=0||height<=0)throw Error('Border layers together must leave room for the pattern.');
- const motif=motifGeometry(c.kind,c.size),faceCount=motif.faces.length;
+ const motif=motifGeometry(c.kind,c.size,c.diamondOuterRatio,c.diamondInnerRatio),faceCount=motif.faces.length;
  if(!Array.isArray(c.faceWoods)||c.faceWoods.length!==faceCount||!c.faceWoods.every(id=>id===null||validWood(id))||!validWood(c.borderWood)||!validWood(c.borderWood2)||!validWood(c.borderWood3)||!validWood(c.borderWood4))throw Error('Choose a valid wood for every component.');
  const units=[],rotations=c.rotations||{};
  function add(key,x,y,row,col){
@@ -131,6 +132,6 @@ export function compositeSteps(p){
 }
 export const number=n=>Number(n.toFixed(3)).toString();
 export function compositeCsv(p){
- const rows=[['Composite cutting board plan'],['Unit',p.c.kind],['Finished board W × L × T (in)',p.c.width,p.c.length,p.c.thickness],['Status',p.unassigned?'INCOMPLETE':'Geometry-derived plan; verify machining on scrap'],['Grain direction','Along stock length; perpendicular to finished board face'],['Unit dimension',p.c.size],['Component interior angles',p.motif.angles],[],['Source face','Wood','Finished polygon in reference end-view coordinates (in)'],...p.motif.faces.map((points,i)=>[i+1,p.c.faceWoods[i]||'unassigned',JSON.stringify(points)]),[],['Rough slice thickness',p.sliceThickness],['Kerf per crosscut',p.c.kerf],['End trim at EACH stock end',p.c.endTrim],['Rough blank volume (bd ft)',p.volume],['Stock budget','One rectangular blank per component; excludes defects, extra workholding and long rip losses'],[],['Batch','Component','Wood','Rectangular blanks','Rough envelope W','Rough envelope H','Grain length','Slices','Finished component shape','Interior angles','Net envelope W','Net envelope H','Outer base','Inner base'],...p.blanks.map(b=>[b.batch,b.component,woods.find(w=>w.id===b.id).name,b.quantity,b.width,b.height,b.length,b.slices,b.shape,b.angles||'90°',...(b.netEnvelope||[b.width-p.c.allowance,b.height-p.c.allowance]),b.outerBase??'',b.innerBase??'']),[],['Unit number','Lattice key','Origin X (in)','Origin Y (in)','Clockwise rotation (deg)','Perimeter trim'],...p.units.map(u=>[u.number,u.key,u.x,u.y,u.angle,u.cropped?'yes':'no']),[],['Unit','Source face','Wood','Visible polygon coordinates (board origin top-left, inches)'],...p.units.flatMap(u=>u.faces.map(f=>[u.number,f.source+1,f.id||'unassigned',JSON.stringify(f.points)])),[],['Border piece','Wood','Finished X','Finished Y','Origin X','Origin Y'],...p.frames.map(f=>[f.name,f.id,f.width,f.height,f.x,f.y]),[],['Step','Instructions'],...compositeSteps(p).map((step,i)=>[i+1,step])];
+ const rows=[['Composite cutting board plan'],['Unit',p.c.kind],['Finished board W × L × T (in)',p.c.width,p.c.length,p.c.thickness],['Status',p.unassigned?'INCOMPLETE':'Geometry-derived plan; verify machining on scrap'],['Grain direction','Along stock length; perpendicular to finished board face'],['Unit dimension',p.c.size],['Component interior angles',p.motif.angles],...(p.c.kind==='diamond'?[['Outer diamond frame radial share',p.c.diamondOuterRatio??.32],['Inner diamond frame radial share',p.c.diamondInnerRatio??.32]]:[]),[],['Source face','Wood','Finished polygon in reference end-view coordinates (in)'],...p.motif.faces.map((points,i)=>[i+1,p.c.faceWoods[i]||'unassigned',JSON.stringify(points)]),[],['Rough slice thickness',p.sliceThickness],['Kerf per crosscut',p.c.kerf],['End trim at EACH stock end',p.c.endTrim],['Rough blank volume (bd ft)',p.volume],['Stock budget','One rectangular blank per component; excludes defects, extra workholding and long rip losses'],[],['Batch','Component','Wood','Rectangular blanks','Rough envelope W','Rough envelope H','Grain length','Slices','Finished component shape','Interior angles','Net envelope W','Net envelope H','Outer base','Inner base'],...p.blanks.map(b=>[b.batch,b.component,woods.find(w=>w.id===b.id).name,b.quantity,b.width,b.height,b.length,b.slices,b.shape,b.angles||'90°',...(b.netEnvelope||[b.width-p.c.allowance,b.height-p.c.allowance]),b.outerBase??'',b.innerBase??'']),[],['Unit number','Lattice key','Origin X (in)','Origin Y (in)','Clockwise rotation (deg)','Perimeter trim'],...p.units.map(u=>[u.number,u.key,u.x,u.y,u.angle,u.cropped?'yes':'no']),[],['Unit','Source face','Wood','Visible polygon coordinates (board origin top-left, inches)'],...p.units.flatMap(u=>u.faces.map(f=>[u.number,f.source+1,f.id||'unassigned',JSON.stringify(f.points)])),[],['Border piece','Wood','Finished X','Finished Y','Origin X','Origin Y'],...p.frames.map(f=>[f.name,f.id,f.width,f.height,f.x,f.y]),[],['Step','Instructions'],...compositeSteps(p).map((step,i)=>[i+1,step])];
  return rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
 }

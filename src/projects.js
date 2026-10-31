@@ -1,6 +1,6 @@
 import {compositePlan} from './composite.js';
 const KEY='grain.projects.v1';
-const fields=['kind','width','length','thickness','size','allowance','kerf','endTrim','stockLength','border','border2','border3','border4','borderWood','borderWood2','borderWood3','borderWood4','faceWoods','rotations','alternate'];
+const fields=['kind','width','length','thickness','size','allowance','kerf','endTrim','stockLength','border','border2','border3','border4','borderWood','borderWood2','borderWood3','borderWood4','faceWoods','rotations','alternate','diamondOuterRatio','diamondInnerRatio'];
 export function validateProject(value){
  if(!value||value.version!==1||typeof value.name!=='string'||!value.config)throw Error('Choose a Grain project file (version 1).');
  const config=Object.fromEntries(fields.filter(k=>Object.hasOwn(value.config,k)).map(k=>[k,structuredClone(value.config[k])]));

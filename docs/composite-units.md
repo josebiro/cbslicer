@@ -25,7 +25,7 @@ Three equal 60°/120° rhombi meet at their 120° corners to form a regular hexa
 
 ### Nested diamonds
 
-A square unit contains four right-triangle corner fills, two concentric diamond frames, and a square core: 13 component prisms. Diamond radii are 0.5S, 0.34S, and 0.18S. Each ring has four mitered trapezoids. For adjacent radii R and r, trapezoid bases are √2R and √2r, and perpendicular thickness is (R−r)/√2, with interior angles 45°/135°. The core side is 0.18√2S. These fixed ring proportions scale with the unit size; free ring-width editing is not implemented.
+A square unit contains four right-triangle corner fills, two concentric diamond frames, and a square core: 13 component prisms. Default diamond radii are 0.5S, 0.34S, and 0.18S. The Pattern Architect can change both frame proportions. For outer and inner radial shares A and B, the radii become 0.5S, 0.5S(1−A), and 0.5S(1−A−B). Each ring has four mitered trapezoids. For adjacent radii R and r, trapezoid bases are √2R and √2r, and perpendicular thickness is (R−r)/√2, with interior angles 45°/135°. The core side is 0.18√2S. The sliders scale the frame proportions with the unit size and display perpendicular milled widths. Fine line, Balanced, and Bold frame presets are starting points. The UI reserves 5% of radial span for a core; narrow parts still need a workshop feasibility check.
 
 Frames require additional subassembly glue-ups. Assemble the inner core and frame, then the outer frame, then the corner fills, preserving the component diagram. Do not interpret "two stages" as exactly two adhesive operations for every pattern or border combination.
 
@@ -48,4 +48,4 @@ The three user-provided photographs establish visual requirements, not the origi
 
 Tests verify polygon area and sampled non-overlap/coverage, rotations, four-ring coverage, exact source lengths and crosscut counts, crop material budgeting, incomplete designs, and export content. Chromium checks cover painting, all families, rotations, border updates, CSV/SVG downloads, print rendering, mobile width, and navigation back to the original designer.
 
-Not implemented: arbitrary polygon drawing, adjustable diamond-frame proportions, chevron/herringbone recipes, metric units, machine-specific machining automation, or saving multiple family variants in a single project.
+Not implemented: arbitrary polygon drawing, chevron/herringbone recipes, metric units, machine-specific machining automation, or saving multiple family variants in a single project.

@@ -8,15 +8,17 @@ const defaults={triangle:['maple','purpleheart','walnut','cherry'],cube:['maple'
 const savedWoods=structuredClone(defaults),savedRotations={triangle:{},cube:{},diamond:{}};
 const numeric=['width','length','thickness','size','stockLength','allowance','kerf','endTrim','border','border2','border3','border4'];
 let current=null;
+let diamondOuterRatio=.32,diamondInnerRatio=.32;
 let selectionMode=false,selection=new Set(),orientationUndo=[],orientationRedo=[];
 const options=(selected,empty=true)=>(empty?`<option value="" ${selected===null?'selected':''}>Unassigned</option>`:'')+woods.map(w=>`<option value="${w.id}" ${w.id===selected?'selected':''}>${w.name}</option>`).join('');
 $('brush').innerHTML=options('walnut');
 $('border-controls').innerHTML=Array.from({length:4},(_,i)=>{const suffix=i===0?'':i+1;return `<div class="fields border-fields"><label>Ring ${i+1} width (in)<input id="border${suffix}" type="number" value="${i===0?.5:0}" min="0" step="0.125"></label><label>Ring ${i+1} wood<select id="borderWood${suffix}">${options(['walnut','maple','purpleheart','walnut'][i],false)}</select></label></div>`;}).join('');
-function getConfig(){return {...Object.fromEntries(numeric.map(id=>[id,Number($(id).value)])),kind:$('kind').value,faceWoods:savedWoods[$('kind').value],rotations:savedRotations[$('kind').value],alternate:$('alternate').checked,...Object.fromEntries(['','2','3','4'].map(suffix=>[`borderWood${suffix}`,$(`borderWood${suffix}`).value]))};}
+function getConfig(){return {...Object.fromEntries(numeric.map(id=>[id,Number($(id).value)])),kind:$('kind').value,diamondOuterRatio,diamondInnerRatio,faceWoods:savedWoods[$('kind').value],rotations:savedRotations[$('kind').value],alternate:$('alternate').checked,...Object.fromEntries(['','2','3','4'].map(suffix=>[`borderWood${suffix}`,$(`borderWood${suffix}`).value]))};}
 function svgDefs(){return '<defs><pattern id="empty-component" patternUnits="userSpaceOnUse" width="0.18" height="0.18"><rect width="0.18" height="0.18" fill="#f3f3ec"/><path d="M0 0L.18 .18M.18 0L0 .18" stroke="#c3c9b8" stroke-width=".01"/></pattern></defs>';}
 function polygon(points,id,attrs=''){return `<polygon points="${points.map(p=>p.join(',')).join(' ')}" fill="${id===null?'url(#empty-component)':wood(id).color}" ${attrs}/>`;}
 function updateFamily(){
  const kind=$('kind').value;
+ $('diamond-architect').hidden=kind!=='diamond';
  $('unit-size-label').textContent=kind==='cube'?'Rhombus side (in)':'Square-unit side (in)';
  $('family-hint').textContent=kind==='cube'?'Three 60° rhombi form a hexagonal unit. Its height is twice the side length; units nest on a staggered lattice.':kind==='diamond'?'Four corner triangles, two diamond frames, and a square core form each square repeat. Frames need additional glue-up stages.':'Four 45° / 45° / 90° triangles meet at the center of a square unit.';
  $('alternate').disabled=kind!=='triangle';
@@ -28,6 +30,7 @@ function render(){
  const p=current,{c,motif}=p,kind=c.kind;
  selection=new Set([...selection].filter(key=>p.units.some(u=>u.key===key)));
  updateComposer();
+ updateDiamondArchitect();
  for(const id of ['print','download','svg-download'])$(id).disabled=Boolean(p.unassigned);
  $('status').className=p.unassigned?'incomplete':'';
  $('status').textContent=p.unassigned?`Assign wood to ${p.unassigned} component${p.unassigned===1?'':'s'} to complete the blank and unlock the workshop plan.`:'';
@@ -78,6 +81,7 @@ if(requestedProject){
  const project=loadProjects().find(p=>p.id===requestedProject);
  if(!project)throw Error('This project is not saved in this browser. Import its project file from the workbench.');
  const config=project.config;
+ diamondOuterRatio=config.diamondOuterRatio??.32;diamondInnerRatio=config.diamondInnerRatio??.32;
  $('kind').value=config.kind;
  for(const id of numeric)$(id).value=config[id]??0;
  for(const suffix of ['','2','3','4'])$(`borderWood${suffix}`).value=config[`borderWood${suffix}`]||'walnut';
@@ -124,3 +128,19 @@ $('rotation-undo').onclick=()=>travelOrientation(true);$('rotation-redo').onclic
 
 document.documentElement.dataset.editorReady='true';
 $('editor-startup').hidden=true;
+
+function updateDiamondArchitect(){
+ if(!current||current.c.kind!=='diamond')return;
+ const s=current.c.size,radial=s/(2*Math.SQRT2),coreFraction=1-diamondOuterRatio-diamondInnerRatio;
+ $('diamond-outer').value=Math.round(diamondOuterRatio*100);$('diamond-inner').value=Math.round(diamondInnerRatio*100);
+ $('diamond-outer').max=Math.floor((.95-diamondInnerRatio)*100+1e-7);$('diamond-inner').max=Math.floor((.95-diamondOuterRatio)*100+1e-7);
+ $('outer-width').textContent=`${n(radial*diamondOuterRatio)}″ milled`;
+ $('inner-width').textContent=`${n(radial*diamondInnerRatio)}″ milled`;
+ $('core-size').textContent=`${n(s/Math.SQRT2*coreFraction)}″`;
+ const names=['Outer frame','Inner frame','Core'],values=[diamondOuterRatio,diamondInnerRatio,coreFraction],colors=[wood(savedWoods.diamond[4])?.color||'#b2b99e',wood(savedWoods.diamond[8])?.color||'#b2b99e',wood(savedWoods.diamond[12])?.color||'#b2b99e'];
+ $('diamond-budget').innerHTML=values.map((v,i)=>`<span style="flex:${v};background:${colors[i]}" title="${names[i]}: ${Math.round(v*100)}% of radial span"><span>${names[i]} ${Math.round(v*100)}%</span></span>`).join('');
+ document.querySelectorAll('[data-proportion]').forEach(button=>{const pair={fine:[.12,.12],balanced:[.32,.32],bold:[.52,.18]}[button.dataset.proportion];button.setAttribute('aria-pressed',String(Math.abs(diamondOuterRatio-pair[0])<.001&&Math.abs(diamondInnerRatio-pair[1])<.001));});
+}
+$('diamond-outer').oninput=()=>{diamondOuterRatio=Number($('diamond-outer').value)/100;render();$('project-status').textContent='Changes not saved';};
+$('diamond-inner').oninput=()=>{diamondInnerRatio=Number($('diamond-inner').value)/100;render();$('project-status').textContent='Changes not saved';};
+document.querySelector('.architect-presets').onclick=e=>{const button=e.target.closest('[data-proportion]');if(!button)return;[diamondOuterRatio,diamondInnerRatio]={fine:[.12,.12],balanced:[.32,.32],bold:[.52,.18]}[button.dataset.proportion];render();$('project-status').textContent='Changes not saved';};
